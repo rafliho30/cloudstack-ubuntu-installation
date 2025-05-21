@@ -307,14 +307,15 @@ Install the desired ISO to be availabled in the cloud environment
 
 ![image](https://hackmd.io/_uploads/SJf_5DiWgl.png)
 
-Instance berhasil dibuat
+Instance successfully made
 
 ![image](https://hackmd.io/_uploads/SyDi9wj-ge.png)
 
+![image](https://hackmd.io/_uploads/ryu3NdjWee.png)
 
 
 ## Managing Cloud Resource Through CLI
-Ada opsi lain untuk memanage resource cloudstack seperti menggunakan Cloudmonkey.
+There is another way to manage cloud resource using Cloudmonkey
 
 ### Installing Cloudmonkey
 ```
