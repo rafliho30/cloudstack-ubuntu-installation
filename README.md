@@ -1,8 +1,6 @@
-
-
 # Apache CloudStack: Private Cloud Installation
-![makara-ui-png-18](https://hackmd.io/_uploads/SkFb8MhZel.png)
 
+![Logo-Teknik-Elektro-Mini-1-1024x461-1](https://hackmd.io/_uploads/ByoVk42-ee.png)
 
 **Members**:
 1. Rafli Adhitia - 2206026523
@@ -316,3 +314,8 @@ cloudmonkey set secretkey GkacHmbpIZvyyYRIIwHNWR-rMaj7UwHcy--aQRaIG5FUZmav56nWYI
 cloudmonkey sync
 
 ```
+
+## References
+
+- Apache Cloudstack 4.18 Documentation: https://docs.cloudstack.apache.org/en/4.18.0.0/index.html
+- https://github.com/AhmadRifqi86/cloudstack-install-and-configure/tree/main
