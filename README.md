@@ -4,12 +4,14 @@ title: Cloudstack Installation
 ---
 
 # Apache CloudStack: Private Cloud Installation
+![makara-ui-png-18](https://hackmd.io/_uploads/SkFb8MhZel.png)
+
 
 **Members**:
-1. Rafli Adhitia
-1. Darren Adam Dewantoro
-1. Darmawan Hanif
-1. Kevin Raihan
+1. Rafli Adhitia - 2206026523
+1. Darren Adam Dewantoro - 2206816600
+1. Darmawan Hanif - 2206829175
+1. Kevin Raihan - 2206059704
 
 ## Project Overview
 Apache CloudStack is an open-source Infrastructure-as-a-Service (IaaS) platform that enables the creation and management of scalable public or private cloud environments. It orchestrates pools of compute, storage, and networking resources, supporting multiple hypervisors including KVM, VMware vSphere, Hyper-V, and XenServer.
@@ -59,59 +61,61 @@ Apache CloudStack is an open-source Infrastructure-as-a-Service (IaaS) platform 
 
 This project involves setting up a private cloud environment using Apache CloudStack. It covers the installation and configuration of key components, including the Management Server, KVM hypervisor, NFS primary and secondary storage, and a virtual router. The goal is to create a scalable, self-managed cloud infrastructure for resource provisioning and management.
 
-### Requirement
+### Specifications
 
 - CPU : Intel Core i5 gen 8
 - RAM : 24 GB
 - Storage : 250GB
 - Network : Ethernet 100GB/s
-- Operating System : Ubuntu Server 22.04
-
-
-
+- Operating System : Ubuntu Server 24.04
 
 ## Pre-installation
 ### Setting up SSH
 First we install net-tools and ssh to be able to config our server remotely
-```
+
+```bash
 sudo apt update
 sudo apt install net-tools openntpd openssh-server sudo vim tar -y
 sed -i '/#PermitRootLogin prohibit-password/a PermitRootLogin yes' /etc/ssh/sshd_config
 sudo vim /etc/ssh/sshd_config
 ```
 Find the line 'PermitRootLogin' make sure it set to 'yes'. Make sure that its uncommented
-```
+
+![image](https://hackmd.io/_uploads/r1njZ9-Wge.png)
+```bash
 sudo systemctl enable ssh
 sudo systemctl start ssh
 sudo ufw allow ssh
 ```
+
+
 Next we check our ip address using **ifconfig**
-```
+```bash
 ifconfig
 ```
-We get the IP address 192.168.1.88
+We get the IP address 192.168.xx.xx and the netmask of our network /xx
 To connect to our server we can use the following command on our device : 
-```
-ssh kelompok18@192.168.1.88
+```bash
+ssh kelompok18@[IP_ADDRESS]
 ```
 
 ### Installing hardware resource monitoring tools
-```
+```bash
 sudo apt install htop lynx duf -y
 sudo apt install bridge-utils
 sudo apt-get install intel-microcode -y
 ```
 
 ### Configure network
-```
+```bash
 cd /etc/netplan
 sudo nano ./0*.yaml
 ```
-The opened file will look like this:
+The opened file should look like this:
 ![image](https://hackmd.io/_uploads/B1V3gqZbxx.png)
 
 ### Configure LVM
-```
+```bash
 #not required unless logical volume is used
 lvextend -l +100%FREE /dev/ubuntu-vg/ubuntu-lv
 resize2fs /dev/ubuntu-vg/ubuntu-lv
@@ -119,18 +123,7 @@ resize2fs /dev/ubuntu-vg/ubuntu-lv
 
 ## Cloudstack Installation
 
-apt-get install openntpd openssh-server sudo vim tar -y
-
-```
-nano /etc/ssh/sshd_config
-    PermitRootLogin yes
-    #PermitRootLogin prohibit-password (comment bagian ini)
-systemctl restart sshd.service
-```
-
-![image](https://hackmd.io/_uploads/r1njZ9-Wge.png)
-
-```
+```bash
 sudo -i
 mkdir -p /etc/apt/keyrings 
 wget -O- http://packages.shapeblue.com/release.asc | gpg --dearmor | sudo tee /etc/apt/keyrings/cloudstack.gpg > /dev/null
@@ -138,7 +131,7 @@ echo deb [signed-by=/etc/apt/keyrings/cloudstack.gpg] http://packages.shapeblue.
 ```
 
 ![image](https://hackmd.io/_uploads/H1jpfcWbeg.png)
-```
+```bash
 apt-get update -y
 apt-get install cloudstack-management mysql-server
 ```
@@ -148,18 +141,18 @@ nano /etc/mysql/mysql.conf.d/mysqld.cnf
 ```
 ![image](https://hackmd.io/_uploads/rkcmXcZZxl.png)
 
-```
+```bash
 cloudstack-setup-databases cloud:cloud@localhost --deploy-as=root:kelompok18 -i 192.168.106.250
 ```
 Configure Primary & Secondary Storage
-```
+```bash
 apt-get install nfs-kernel-server quota
 echo "/export  *(rw,async,no_root_squash,no_subtree_check)" > /etc/exports
 mkdir -p /export/primary /export/secondary
 exportfs -a
 ```
 Configure NFS Server
-```
+```bash
 sed -i -e 's/^RPCMOUNTDOPTS="--manage-gids"$/RPCMOUNTDOPTS="-p 892 --manage-gids"/g' /etc/default/nfs-kernel-server
 sed -i -e 's/^STATDOPTS=$/STATDOPTS="--port 662 --outgoing-port 2020"/g' /etc/default/nfs-common
 echo "NEED_STATD=yes" >> /etc/default/nfs-common
@@ -172,12 +165,11 @@ service nfs-kernel-server restart
 
 ## Configure Cloudstack Host with KVM Hypervisor
 ### Install KVM and Cloudstack Agent
-```
+```bash
 apt-get install qemu-kvm cloudstack-agent -y
 ```
 
-
-```
+```bash
 sed -i -e 's/\#vnc_listen.*$/vnc_listen = "0.0.0.0"/g' /etc/libvirt/qemu.conf
 
 # On Ubuntu 22.04, add LIBVIRTD_ARGS="--listen" to /etc/default/libvirtd instead.
@@ -186,19 +178,19 @@ sed -i.bak 's/^\(LIBVIRTD_ARGS=\).*/\1"--listen"/' /etc/default/libvirtd
 ```
 
 ### Restart Libvirtd
-```
+```bash
 systemctl mask libvirtd.socket libvirtd-ro.socket libvirtd-admin.socket libvirtd-tls.socket libvirtd-tcp.socket
 systemctl restart libvirtd
 ```
 ### Configuration to Support Docker and Other Services
-```
+```bash
 echo "net.bridge.bridge-nf-call-arptables = 0" >> /etc/sysctl.conf
 echo "net.bridge.bridge-nf-call-iptables = 0" >> /etc/sysctl.conf
 sysctl -p
 ```
 
 ### Generate Unique Host ID
-```
+```bash
 apt-get install uuid -y
 UUID=$(uuid)
 echo host_uuid = \"$UUID\" >> /etc/libvirt/libvirtd.conf
@@ -206,7 +198,7 @@ systemctl restart libvirtd
 ```
 
 ### Configure Iptables Firewall and Make it persistent
-```
+```bash
 NETWORK=192.168.1.50/24
 iptables -A INPUT -s $NETWORK -m state --state NEW -p udp --dport 111 -j ACCEPT
 iptables -A INPUT -s $NETWORK -m state --state NEW -p tcp --dport 111 -j ACCEPT
@@ -229,7 +221,7 @@ apt-get install iptables-persistent
 ```
 
 ### Disable apparmour on libvirtd
-```
+```bash
 ln -s /etc/apparmor.d/usr.sbin.libvirtd /etc/apparmor.d/disable/
 ln -s /etc/apparmor.d/usr.lib.libvirt.virt-aa-helper /etc/apparmor.d/disable/
 apparmor_parser -R /etc/apparmor.d/usr.sbin.libvirtd
@@ -237,7 +229,7 @@ apparmor_parser -R /etc/apparmor.d/usr.lib.libvirt.virt-aa-helper
 ```
 
 ### Launch management Server
-```
+```bash
 cloudstack-setup-management
 systemctl status cloudstack-management
 tail -f /var/log/cloudstack/management/management-server.log #if you want to troubleshoot 
@@ -245,13 +237,13 @@ tail -f /var/log/cloudstack/management/management-server.log #if you want to tro
 ```
 
 ### Open Web Browser
-```
+```bash
 http://<YOUR_IP_ADDRESS>:8080
 ```
 ![image](https://hackmd.io/_uploads/BkHCFqbZgx.png)
 
 Login dengan default username
-```
+```bash
 username : admin
 password : password
 ```
@@ -261,35 +253,29 @@ password : password
 
 ---
 
-Selanjutnya add public traffic
+Add public traffic
 ![image](https://hackmd.io/_uploads/rJUwNBibgg.png)
 ![image](https://hackmd.io/_uploads/S1h8HSi-xl.png)
 ![image](https://hackmd.io/_uploads/HyGiHBoZlg.png)
 
 ---
 
-Cluster
+Add Cluster
 
 ![image](https://hackmd.io/_uploads/rJk6SSjWgx.png)
 ![image](https://hackmd.io/_uploads/ByHxIBj-gx.png)
-
 ![image](https://hackmd.io/_uploads/r16_LSjWeg.png)
-
 ![image](https://hackmd.io/_uploads/HkMqISjble.png)
 
-
-
 ![image](https://hackmd.io/_uploads/B1A9V5Vbge.png)
-
 ![image](https://hackmd.io/_uploads/SJEfSq4Zxl.png)
 
-Install the desired ISO to be availabled in the cloud environment
+Install the desired ISO to be available in the cloud environment
 
 ![image](https://hackmd.io/_uploads/SyltPcEZel.png)
 
 
-
-## Buat Instance
+## Add a new instances
 
 ![image](https://hackmd.io/_uploads/HyFTYPjbxg.png)
 
@@ -318,11 +304,12 @@ Instance successfully made
 There is another way to manage cloud resource using Cloudmonkey
 
 ### Installing Cloudmonkey
-```
+```bash
 snap install cloudmonkey
 cloudmonkey --version
 ```
-```
+
+```bash
 cloudmonkey set url http://192.168.1.50:8080/client/api
 cloudmonkey set apikey zYisITlcuVSz6W7trDM3qBwigI5JqfUoj5Yu27FJCswHqHn6slZLk1jd6RzWLiuLT-2tpR-U3Oijg4JWyk3MtQ
 
