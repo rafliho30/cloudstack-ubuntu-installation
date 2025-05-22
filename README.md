@@ -1,7 +1,4 @@
----
-title: Cloudstack Installation
 
----
 
 # Apache CloudStack: Private Cloud Installation
 ![makara-ui-png-18](https://hackmd.io/_uploads/SkFb8MhZel.png)
@@ -111,8 +108,10 @@ sudo apt-get install intel-microcode -y
 cd /etc/netplan
 sudo nano ./0*.yaml
 ```
-The opened file should look like this:
+The opened file should look similarly like this:
 ![image](https://hackmd.io/_uploads/B1V3gqZbxx.png)
+
+You can configure the IP address to static or dhcp4 for the cloudbr0. But be wary when you change the connected network it won't work properly anymore.
 
 ### Configure LVM
 ```bash
@@ -142,7 +141,7 @@ nano /etc/mysql/mysql.conf.d/mysqld.cnf
 ![image](https://hackmd.io/_uploads/rkcmXcZZxl.png)
 
 ```bash
-cloudstack-setup-databases cloud:cloud@localhost --deploy-as=root:kelompok18 -i 192.168.106.250
+cloudstack-setup-databases cloud:cloud@localhost --deploy-as=root:kelompok18 -i localhost
 ```
 Configure Primary & Secondary Storage
 ```bash
