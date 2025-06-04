@@ -3,7 +3,7 @@
 ![Logo-Teknik-Elektro-Mini-1-1024x461-1](https://hackmd.io/_uploads/ByoVk42-ee.png)
 
 **Members**:
-1. Rafli Adhitia - 2206026523
+1. Rafli Adithia - 2206026523
 1. Darren Adam Dewantoro - 2206816600
 1. Darmawan Hanif - 2206829175
 1. Kevin Raihan - 2206059704
@@ -233,7 +233,7 @@ tail -f /var/log/cloudstack/management/management-server.log #if you want to tro
 #wait until all services (components) running successfully
 ```
 
-### Open Web Browser
+### Open Web Browser and Change Password
 ```bash
 http://<YOUR_IP_ADDRESS>:8080
 ```
@@ -244,63 +244,171 @@ Login dengan default username
 username : admin
 password : password
 ```
+Kita akan mengubah password default menjadi : 
+```
+username : admin
+password : kelompok18
+```
 ![image](https://hackmd.io/_uploads/S1J4q5W-gl.png)
+### Add a Zone
+Next, we will add a new Zone within the CloudStack environment. The configurations to be added are:
+```
+Name : ZONE-1
+IPv4 DNS1 : 8.8.8.8
+IPv4 DNS2 : 1.1.1.1
+Internal DNS1 : 192.168.1.50
+```
+- IPv4 DNS indicates the IP addresses of public DNS servers that will be used within the zone for external domain name resolution.
+- Internal DNS is the IP address of the internal DNS server used by instances within the zone for internal domain name resolution.
+#### Whats a zone?
+A zone is the largest organizational unit that is a collection of one or more “Pods” (each containing a host and a primary storage server) and a secondary storage server shared by all pods within the zone. Zones provide physical isolation and redundancy
 ![image](https://hackmd.io/_uploads/SkD7XHoWeg.png)
+We will also configure:
+
+- Hypervisor: The virtualization software used to run VMs (KVM).
+- Guest CIDR: The IP address block (CIDR) for the guest (VM) network within this zone (10.1.1.0/24).
+
 ![image](https://hackmd.io/_uploads/rJ5IXHsWeg.png)
 
 ---
 
-Add public traffic
+### Add public traffic
+Here we define the range of public IP addresses that virtual machines (VMs) in your cloud will use to access the internet. The details for each IP range : 
+- Gateway: The IP address of the gateway for this public IP range (192.168.1.1).
+- Netmask: The subnet mask associated with this IP range (255.255.255.0).
+- VLAN/VNI: (Optional) The VLAN or VNI ID if your network uses VLANs or overlay networks.
+- Start IP & End IP: The beginning and end IP addresses of the public IP range to be allocated (192.168.1.241 to 192.168.1.250).
 ![image](https://hackmd.io/_uploads/rJUwNBibgg.png)
+### Add a Pod
+We add the first pod to the zone and configure a range of reserved IP addresses for CloudStack's internal management traffic. These IPs are crucial for the management plane to communicate with hosts and other components within the pod. The following details are provided: 
+- Reserved system gateway: The gateway IP for the reserved system IPs (192.168.1.50).
+- Reserved system netmask: The subnet mask for the reserved system IPs (255.255.255.0).
+- Start reserved system IP & End reserved system IP: The starting and ending IP addresses of the range reserved for CloudStack's internal management (192.168.1.235 to 192.168.1.240).
+#### Whats a Pod?
+A logical grouping of hosts and primary storage servers within a Zone. Each pod contains a collection of compute and storage resources.
 ![image](https://hackmd.io/_uploads/S1h8HSi-xl.png)
+### Select Guest Traffic
+In this phase, we specify a range of VLAN IDs or VXLAN network identifiers (VNIs) dedicated to carrying communication between end-user virtual machines (VMs). This provides network isolation for individual guest networks. The following detail is provided:
+- VLAN/VNI range: A numerical range defining the available VLAN IDs or VNIs for guest networks (1000 to 3000).
 ![image](https://hackmd.io/_uploads/HyGiHBoZlg.png)
 
 ---
 
-Add Cluster
-
+### Add Cluster
+We add the first cluster to the pod. A cluster serves as a logical grouping for hosts, which will be added later.
 ![image](https://hackmd.io/_uploads/rJk6SSjWgx.png)
+### Add a Host to the Cluster
+In this phase, we add the first host (physical computer) to the cluster. To enable the host to function in CloudStack, we provide its network credentials so the CloudStack management server can connect to it. The following details are provided:
+- Host name: The DNS name or IP address of the host (192.168.1.50). This is how CloudStack will identify and connect to the host.
+- Username: The username for accessing the host (root). This account needs appropriate permissions for CloudStack to manage the host.
+- Authentication Method: The method used to authenticate with the host, either Password or System SSH Key.
+- Password: The password for the specified username on the host.
+#### Whats a Host?
+A physical server (computer) where guest virtual machines (VMs) will run. It must have hypervisor software installed and be connected to the CloudStack management server.
 ![image](https://hackmd.io/_uploads/ByHxIBj-gx.png)
+### Designate Primary Storage to Cluster
+In this phase, we add the first primary storage server to the cluster. Primary storage is essential as it contains the disk volumes for all virtual machines (VMs) running on hosts within this cluster. We configure its details as follows:
+- Name: A logical name for the primary storage (PRIMARY).
+- Scope: Defines the scope of the primary storage, typically Zone or Cluster.
+- Protocol: The storage protocol used to access the primary storage (nfs). CloudStack supports various standards-compliant protocols.
+- Server: The IP address or hostname of the primary storage server ( 192.168.1.50).
+- Path: The specific path on the storage server where the disk volumes will reside (/export/primary).
+- Provider: The storage provider used (DefaultPrimary).
+#### Why do we need Primary Storage
+ Provides disk volumes for running VMs. This is where the actual virtual hard disks of your VMs are stored and accessed during operation. It is typically high-performance storage.
 ![image](https://hackmd.io/_uploads/r16_LSjWeg.png)
+### Designate Secondary Storage
+Secondary storage is crucial for storing VM templates, ISO images, and VM disk volume snapshots. This server must be accessible to all hosts within the zone
 ![image](https://hackmd.io/_uploads/HkMqISjble.png)
-
+Finally after configurating our Zone we launch it to our server
 ![image](https://hackmd.io/_uploads/B1A9V5Vbge.png)
 ![image](https://hackmd.io/_uploads/SJEfSq4Zxl.png)
 
-Install the desired ISO to be available in the cloud environment
-
+---
+### Install the desired ISO to be available in the cloud environment
+What we Installed : 
+- VMware Tools: A suite of utilities that enhances the performance of the virtual machine's guest operating system and improves virtual machine management.
+- XS Tools: Similar to VMware Tools, but specifically for XenServer (now Citrix Hypervisor), providing enhanced performance and management capabilities for VMs.
+- Ubuntu 22.04 LTS: A specific version of the Ubuntu Linux operating system, with LTS standing for Long Term Support, indicating extended maintenance and support.
 ![image](https://hackmd.io/_uploads/SyltPcEZel.png)
-
-
-## Add a new instances
-
+___
+### Add a new instances
+We must first select the specific infrastructure components within the CloudStack environment where the new virtual machine (instance) will be deployed. This involves choosing the desired logical and physical location such as Zone, Pod, Cluster, and Host.
 ![image](https://hackmd.io/_uploads/HyFTYPjbxg.png)
-
+We select the ISO for ubuntu server jammy 22.04 
 ![image](https://hackmd.io/_uploads/rJRb5wsZlg.png)
-
+We define the computational resources and storage capacity for the new virtual machine.
 ![image](https://hackmd.io/_uploads/BJjX5DsWll.png)
 
 ### Add Network untuk Instance
+We configure the network details for the new virtual machine, ensuring it can communicate within the cloud and potentially with external networks. Here we create a local network within the cloud with the isolated network option named (NETWORK).
+
+Isolated network means a network that is logically isolated from other networks. Guests (VMs) in the Isolated Network can communicate with each other using private IP addresses. Each isolated network has its own virutal router which is automatically provided by Cloudstack. This virtual router will manage guest traffic for VMs (guests) when accessing outside networks.
+
+First determine the name and type of network offering, namely “Offering for Isolated Networks with Source Nat service enabled”, zone selected domain and others.
 
 ![image](https://hackmd.io/_uploads/BkWQOUo-le.png)
 
+then add the gateway and netmask. **The inputted gateway and netmask will determine the private IP address neighborhood available within the Isolated Network**. Add the DNS as well.
 ![image](https://hackmd.io/_uploads/H1SP8sNWlx.png)
 
+In the isolated network configuration for this guest, it also needs to be configured so that it can ping out. Egress rules can be configured as needed, for example here the destination is the default route.
+![image](https://hackmd.io/_uploads/HJ3akBdfex.png)
+
+On the ip connected to the virtual router (isolated network created earlier), an option is also added to the firewall where traffic from any origin is not blocked by the firewall.
+
+![image](https://hackmd.io/_uploads/H1rMZN_Glx.png)
+
+Then, click OK.
+
+Next, in the add new instance option, we can select the NETWORK that was created earlier.
 ![image](https://hackmd.io/_uploads/Hybwcvibel.png)
 
+![image](https://hackmd.io/_uploads/ry017ruGee.png)
+
 ![image](https://hackmd.io/_uploads/SJf_5DiWgl.png)
+
+When the options are all in accordance with those in the picture, click Launch Instance.
 
 Instance successfully made
 
 ![image](https://hackmd.io/_uploads/SyDi9wj-ge.png)
 
+These instances can be accessed via the View Console button or web browser if connected to the same local network or from outside if configured on your local router network.
+
+![image](https://hackmd.io/_uploads/B1BVmr_Mee.png)
+
 ![image](https://hackmd.io/_uploads/ryu3NdjWee.png)
 
+Then continue the installation until you get to the main terminal of the ubuntu CLI (or other distros).
 
-## Managing Cloud Resource Through CLI
+![image](https://hackmd.io/_uploads/BysV3oaMeg.png)
+
+![image](https://hackmd.io/_uploads/BkQQu3pzlx.png)
+
+Next you can do port forwarding on port 22 for the private port and any public port (ex: 10010) to the public ip address that is the NAT Source from the Network tab -> Public IP addresses -> IP that is the NAT source
+
+![image](https://hackmd.io/_uploads/By1b8o6Mlg.png)
+
+Add the previously created VM as a port forwarding target
+![image](https://hackmd.io/_uploads/r1k4Ljaflg.png)
+
+![image](https://hackmd.io/_uploads/ryTDUjpfle.png)
+
+![image](https://hackmd.io/_uploads/Syb9nipGxx.png)
+
+After port forwarding is done we can access the vm that is created in isolated network using ssh
+
+```
+ssh -p 10010 kelompok18vm@192.168.1.243
+```
+![image](https://hackmd.io/_uploads/r1b232TGgg.png)
+
+---
+### Managing Cloud Resource Through CLI
 There is another way to manage cloud resource using Cloudmonkey
 
-### Installing Cloudmonkey
+#### Installing Cloudmonkey
 ```bash
 snap install cloudmonkey
 cloudmonkey --version
@@ -319,3 +427,6 @@ cloudmonkey sync
 
 - Apache Cloudstack 4.18 Documentation: https://docs.cloudstack.apache.org/en/4.18.0.0/index.html
 - https://github.com/AhmadRifqi86/cloudstack-install-and-configure/tree/main
+
+### YouTube Link :
+**https://youtu.be/Xi4Z2mnE2wY**
